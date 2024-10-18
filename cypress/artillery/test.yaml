@@ -1,0 +1,48 @@
+config:
+  target: "https://jsonplaceholder.typicode.com"
+  phases:
+    - duration: 60
+      arrivalRate: 10
+      name: "Artillery jsonplaceholder Test"
+
+  payload:
+    path: "payload.csv"
+    fields:
+      - name
+      - body
+
+scenarios:
+  - name: "Fetching posts"
+    flow:
+      - get:
+          url: "/posts"
+          validate:
+            - statusCode: 200
+          capture:
+            - json: "$.id"
+              as: "postId"
+
+  - name: "Creating a post"
+    flow:
+      - post:
+          url: "/posts"
+          json:
+            title: "{{ name }}"
+            body: "{{ body }}"
+            userId: 1
+          validate:
+            - statusCode: 201
+            - contentType: "application/json"
+
+ensure:
+  - max_response_time: 2000
+  - max_errors: 1
+  - p95:
+      response_time: 500
+
+metrics:
+  checks:
+    response_time:
+      p95: 500
+    errors: 0
+    max_response_time: 2000
